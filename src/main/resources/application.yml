@@ -1,0 +1,13 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: payment-processing-kurrentdb-java25
+
+kurrentdb:
+  connection-string: kurrentdb://localhost:2113?tls=false
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
