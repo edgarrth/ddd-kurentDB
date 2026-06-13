@@ -1,0 +1,16 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: agilepm-kurrentdb-java25
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false
+
+kurrentdb:
+  connection-string: ${KURRENTDB_CONNECTION_STRING:kurrentdb://localhost:2113?tls=false}
+
+agilepm:
+  actor:
+    mailbox-capacity: 512
