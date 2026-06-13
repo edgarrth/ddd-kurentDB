@@ -1,0 +1,45 @@
+### 1. Initiate product
+POST http://localhost:8080/agilepm/v1/tenants/tenant-a/products
+Content-Type: application/json
+
+{
+  "productId": "product-001",
+  "name": "AgilePM Platform",
+  "description": "Product used to manage Scrum planning",
+  "productOwnerId": "owner-001"
+}
+
+### 2. Schedule release
+POST http://localhost:8080/agilepm/v1/tenants/tenant-a/products/product-001/releases
+Content-Type: application/json
+
+{
+  "releaseId": "release-2026-q3",
+  "name": "Q3 Release",
+  "scheduledFor": "2026-09-30"
+}
+
+### 3. Plan sprint
+POST http://localhost:8080/agilepm/v1/tenants/tenant-a/products/product-001/sprints
+Content-Type: application/json
+
+{
+  "sprintId": "sprint-001",
+  "name": "Sprint 1",
+  "startsOn": "2026-07-01",
+  "endsOn": "2026-07-15"
+}
+
+### 4. Request discussion
+POST http://localhost:8080/agilepm/v1/tenants/tenant-a/products/product-001/discussion-requests
+
+### 5. Attach discussion
+PUT http://localhost:8080/agilepm/v1/tenants/tenant-a/products/product-001/discussion
+Content-Type: application/json
+
+{
+  "discussionId": "discussion-abc"
+}
+
+### 6. Query read model
+GET http://localhost:8080/agilepm/v1/tenants/tenant-a/products/product-001
