@@ -1,0 +1,7 @@
+[
+  {"merchantId":"MERCHANT-001","name":"Andes Market","category":"grocery","country":"PE"},
+  {"merchantId":"MERCHANT-002","name":"Lima Tech Store","category":"electronics","country":"PE"},
+  {"merchantId":"MERCHANT-003","name":"Cusco Travel","category":"travel","country":"PE"},
+  {"merchantId":"MERCHANT-004","name":"Pacific Food","category":"restaurant","country":"PE"},
+  {"merchantId":"MERCHANT-005","name":"Digital Services SAC","category":"services","country":"PE"}
+]

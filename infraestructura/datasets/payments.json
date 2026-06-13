@@ -1,0 +1,12 @@
+[
+  {"merchantId":"MERCHANT-001","customerId":"CUSTOMER-001","amount":120.50,"currency":"PEN","paymentMethod":"CARD","orderId":"ORDER-10001","scenario":"CAPTURED"},
+  {"merchantId":"MERCHANT-001","customerId":"CUSTOMER-002","amount":85.00,"currency":"PEN","paymentMethod":"WALLET","orderId":"ORDER-10002","scenario":"AUTHORIZED"},
+  {"merchantId":"MERCHANT-002","customerId":"CUSTOMER-003","amount":999.90,"currency":"PEN","paymentMethod":"CARD","orderId":"ORDER-10003","scenario":"CAPTURED_WITH_REFUND","refundAmount":150.00,"refundReason":"Partial customer return"},
+  {"merchantId":"MERCHANT-002","customerId":"CUSTOMER-004","amount":49.99,"currency":"USD","paymentMethod":"CARD","orderId":"ORDER-10004","scenario":"FAILED","failureReason":"Issuer declined transaction"},
+  {"merchantId":"MERCHANT-003","customerId":"CUSTOMER-005","amount":320.00,"currency":"USD","paymentMethod":"CARD","orderId":"ORDER-10005","scenario":"CANCELLED","cancelReason":"Customer cancelled before authorization"},
+  {"merchantId":"MERCHANT-004","customerId":"CUSTOMER-006","amount":42.90,"currency":"PEN","paymentMethod":"QR","orderId":"ORDER-10006","scenario":"CAPTURED"},
+  {"merchantId":"MERCHANT-005","customerId":"CUSTOMER-007","amount":700.00,"currency":"PEN","paymentMethod":"BANK_TRANSFER","orderId":"ORDER-10007","scenario":"AUTHORIZED"},
+  {"merchantId":"MERCHANT-003","customerId":"CUSTOMER-008","amount":250.00,"currency":"USD","paymentMethod":"CARD","orderId":"ORDER-10008","scenario":"CAPTURED_WITH_REFUND","refundAmount":50.00,"refundReason":"Service adjustment"},
+  {"merchantId":"MERCHANT-004","customerId":"CUSTOMER-009","amount":18.50,"currency":"PEN","paymentMethod":"WALLET","orderId":"ORDER-10009","scenario":"FAILED","failureReason":"Insufficient wallet balance"},
+  {"merchantId":"MERCHANT-005","customerId":"CUSTOMER-010","amount":155.75,"currency":"PEN","paymentMethod":"CARD","orderId":"ORDER-10010","scenario":"CAPTURED"}
+]
