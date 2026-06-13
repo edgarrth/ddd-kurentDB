@@ -1,100 +1,99 @@
-#  Proyecto
+# Payment Processing with Java 25, DDD, Hexagonal Architecture, DomoActors-style Actors and KurrentDB
 
-El bounded context es `AgilePM`. El agregado principal es `Product`, modelado como event-sourced aggregate.
+Este proyecto es una PoC de **Payment Processing** construida en **Java 25**. Implementa una arquitectura basada en **Domain-Driven Design**, **Arquitectura Hexagonal**, **CQRS**, **Event Sourcing** y un modelo de actores inspirado en DomoActors para procesar comandos de forma secuencial por agregado.
 
-Comandos implementados:
+## Objetivo del dominio
 
-- `initiate(...)`
-- `changeDescription(...)`
-- `changeProductOwner(...)`
-- `requestDiscussion()`
-- `attachDiscussion(...)`
-- `timeOutDiscussionRequest()`
-- `planSprint(...)`
-- `scheduleRelease(...)`
+El microservicio gestiona el ciclo de vida de un pago:
 
-Eventos persistidos en KurrentDB:
+1. Iniciar un pago.
+2. Autorizarlo.
+3. Capturarlo.
+4. Fallarlo.
+5. Cancelarlo.
+6. Reembolsarlo.
+7. Consultar su estado reconstruido desde eventos.
+8. Consultar el historial de eventos.
 
-- `ProductInitiated`
-- `ProductDescriptionChanged`
-- `ProductOwnerChanged`
-- `ProductDiscussionRequested`
-- `ProductDiscussionAttached`
-- `ProductDiscussionRequestTimedOut`
-- `SprintPlanned`
-- `ReleaseScheduled`
+## Aggregate principal
+
+El agregado raíz es `Payment`.
+
+Estados posibles:
+
+- `NEW`
+- `AUTHORIZED`
+- `CAPTURED`
+- `FAILED`
+- `REFUNDED`
+- `CANCELLED`
+
+## Comandos
+
+- `InitiatePaymentCommand`
+- `AuthorizePaymentCommand`
+- `CapturePaymentCommand`
+- `FailPaymentCommand`
+- `RefundPaymentCommand`
+- `CancelPaymentCommand`
+
+## Eventos de dominio
+
+- `PaymentInitiated`
+- `PaymentAuthorized`
+- `PaymentCaptured`
+- `PaymentFailed`
+- `PaymentRefunded`
+- `PaymentCancelled`
+
+Cada cambio de estado se guarda como evento en KurrentDB. El estado actual del pago no se persiste como una fila tradicional, sino que se reconstruye aplicando su historial de eventos.
 
 ## Arquitectura
 
 ```text
-REST Controller
-    |
-    v
-Application Ports
-    |-- ProductCommands  -> actor protocol command-side
-    |-- ProductQueries   -> read-side query protocol
-    |
-    v
-ProductActor
-    |
-    v
-Domain Aggregate: Product
-    |
-    v
-EventStreamStore port
-    |
-    v
-KurrentEventStreamStore adapter
-    |
-    v
-KurrentDB
+src/main/java/com/example/payments
+├── domain
+│   ├── model
+│   ├── commands
+│   ├── events
+│   └── ports
+├── application
+│   ├── actors
+│   └── service
+├── infrastructure
+│   └── kurrentdb
+├── adapters
+│   └── rest
+└── config
 ```
 
-## Estructura
+## Flujo
 
 ```text
-.
-├── infraestructura
-│   ├── docker
-│   │   ├── Dockerfile
-│   │   └── docker-compose.yml
-│   └── http
-│       ├── requests.http
-│       └── responses.md
-├── src/main/java/com/example/agilepm
-│   ├── adapter
-│   │   ├── in/rest
-│   │   └── out/kurrentdb
-│   ├── application
-│   │   ├── actor
-│   │   ├── port/in
-│   │   ├── port/out
-│   │   └── service
-│   ├── config
-│   └── domain
-│       ├── event
-│       └── model
-└── src/main/resources/application.yml
+REST Controller
+    ↓
+Application Service
+    ↓
+Payment Actor
+    ↓
+Payment Aggregate
+    ↓
+Domain Events
+    ↓
+KurrentDB Event Store
 ```
 
-## Requisitos
+## Modelo de actores
 
-- Java 25
-- Maven 3.9+
-- Docker / Docker Compose
+El proyecto incluye un `PaymentActorSystem` y un `PaymentActor` por `paymentId`. La finalidad es procesar los comandos de un mismo pago de forma secuencial, evitando condiciones de carrera sobre el agregado.
 
-## Levantar infraestructura y API
+Este enfoque está inspirado en DomoActors, pero adaptado a Java mediante un actor simple basado en `ConcurrentHashMap` y `ReentrantLock`.
 
-Desde la raíz del proyecto:
+## Levantar infraestructura
 
 ```bash
-docker compose -f infraestructura/docker/docker-compose.yml up --build
-```
-
-La API quedará disponible en:
-
-```text
-http://localhost:8080
+cd infraestructura
+docker compose up -d
 ```
 
 KurrentDB quedará disponible en:
@@ -103,148 +102,135 @@ KurrentDB quedará disponible en:
 http://localhost:2113
 ```
 
-## Ejecutar local sin Docker para la API
-
-Primero levanta solo KurrentDB:
-
-```bash
-docker compose -f infraestructura/docker/docker-compose.yml up kurrentdb
-```
-
-Luego ejecuta la aplicación:
+## Ejecutar el microservicio
 
 ```bash
 mvn spring-boot:run
 ```
 
-`application.yml` usa esta conexión por defecto:
+El servicio queda disponible en:
 
-```yaml
-kurrentdb:
-  connection-string: ${KURRENTDB_CONNECTION_STRING:kurrentdb://localhost:2113?tls=false}
+```text
+http://localhost:8080
+```
+
+Swagger UI:
+
+```text
+http://localhost:8080/swagger-ui.html
 ```
 
 ## Endpoints REST
 
-### Iniciar producto
+### Iniciar pago
 
 ```http
-POST /agilepm/v1/tenants/{tenantId}/products
+POST /payments/v1/payments
+```
+
+Request:
+
+```json
+{
+  "merchantId": "merchant-001",
+  "customerId": "customer-9001",
+  "amount": 150.75,
+  "currency": "PEN",
+  "paymentMethod": "CARD",
+  "orderId": "order-2026-0001"
+}
+```
+
+### Autorizar pago
+
+```http
+POST /payments/v1/payments/{paymentId}/authorizations
 ```
 
 ```json
 {
-  "productId": "product-001",
-  "name": "AgilePM Platform",
-  "description": "Product used to manage Scrum planning",
-  "productOwnerId": "owner-001"
+  "authorizationCode": "AUTH-123456"
 }
 ```
 
-### Cambiar descripción
+### Capturar pago
 
 ```http
-PATCH /agilepm/v1/tenants/{tenantId}/products/{productId}/description
+POST /payments/v1/payments/{paymentId}/captures
 ```
 
 ```json
 {
-  "description": "New product description"
+  "captureReference": "CAP-987654"
 }
 ```
 
-### Cambiar product owner
+### Reembolsar pago
 
 ```http
-PATCH /agilepm/v1/tenants/{tenantId}/products/{productId}/owner
+POST /payments/v1/payments/{paymentId}/refunds
 ```
 
 ```json
 {
-  "productOwnerId": "owner-002"
+  "amount": 50.00,
+  "reason": "Customer partial refund request"
 }
 ```
 
-### Solicitar discusión
+### Cancelar pago
 
 ```http
-POST /agilepm/v1/tenants/{tenantId}/products/{productId}/discussion-requests
-```
-
-### Adjuntar discusión
-
-```http
-PUT /agilepm/v1/tenants/{tenantId}/products/{productId}/discussion
+POST /payments/v1/payments/{paymentId}/cancellations
 ```
 
 ```json
 {
-  "discussionId": "discussion-abc"
+  "reason": "Customer cancelled order before capture"
 }
 ```
 
-### Planificar sprint
+### Consultar pago
 
 ```http
-POST /agilepm/v1/tenants/{tenantId}/products/{productId}/sprints
+GET /payments/v1/payments/{paymentId}
 ```
 
-```json
-{
-  "sprintId": "sprint-001",
-  "name": "Sprint 1",
-  "startsOn": "2026-07-01",
-  "endsOn": "2026-07-15"
-}
-```
-
-### Programar release
+### Consultar eventos
 
 ```http
-POST /agilepm/v1/tenants/{tenantId}/products/{productId}/releases
+GET /payments/v1/payments/{paymentId}/events
 ```
 
-```json
-{
-  "releaseId": "release-2026-q3",
-  "name": "Q3 Release",
-  "scheduledFor": "2026-09-30"
-}
-```
+## Reglas de negocio principales
 
-### Consultar read model
+- Un pago inicia en estado `NEW`.
+- Solo un pago `NEW` puede ser autorizado.
+- Solo un pago `AUTHORIZED` puede ser capturado.
+- Solo un pago `CAPTURED` puede ser reembolsado.
+- Un pago `NEW` o `AUTHORIZED` puede ser cancelado.
+- Un pago `CAPTURED` o `REFUNDED` no puede fallarse.
 
-```http
-GET /agilepm/v1/tenants/{tenantId}/products/{productId}
-```
+## Configuración
 
-## Decisiones de diseño
-
-### DDD
-
-- `Product` es un agregado con reglas de negocio y estado privado.
-- Los cambios del agregado se expresan como hechos de dominio, no como updates SQL.
-- La reconstitución del agregado se hace aplicando el stream de eventos.
-
-### CQRS
-
-- `ProductCommands` contiene solo comandos.
-- `ProductQueries` contiene solo consultas.
-- El read model es separado y está representado por `ProductView`.
-
-### Event Sourcing
-
-- Cada instancia de `Product` usa un stream propio:
+Archivo:
 
 ```text
-agilepm-product-{tenantId}-{productId}
+src/main/resources/application.yml
 ```
 
-- KurrentDB persiste los eventos en orden.
-- La concurrencia se controla con expected revision.
+```yaml
+server:
+  port: 8080
 
-### Actores estilo DomoActors
+spring:
+  application:
+    name: payment-processing-kurrentdb-java25
 
-- Cada `ProductActor` representa una instancia lógica de agregado.
-- El actor procesa mensajes uno por uno desde su mailbox.
-- Esto evita race conditions sobre el agregado, siguiendo la idea del artículo: protocolo tipado, mensajes secuenciales y estado protegido.
+kurrentdb:
+  connection-string: kurrentdb://localhost:2113?tls=false
+```
+
+## Notas
+
+Esta PoC usa Payment Processing como dominio de ejemplo. El mismo patrón puede aplicarse a dominios fintech como transferencias, billeteras digitales, créditos, conciliación, reversas o liquidación de pagos.
