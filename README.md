@@ -1,6 +1,6 @@
-# Payment Processing with Java 25, DDD, Hexagonal Architecture, DomoActors-style Actors and KurrentDB
+# Payment Processing, DDD, Hexagonal Architecture, DomoActors-style Actors and KurrentDB
 
-Este proyecto es una PoC de **Payment Processing** construida en **Java 25**. Implementa una arquitectura basada en **Domain-Driven Design**, **Arquitectura Hexagonal**, **CQRS**, **Event Sourcing** y un modelo de actores inspirado en DomoActors para procesar comandos de forma secuencial por agregado.
+Este proyecto es una PoC de **Payment Processing**. Implementa una arquitectura basada en **Domain-Driven Design**, **Arquitectura Hexagonal**, **CQRS**, **Event Sourcing** y un modelo de actores inspirado en DomoActors para procesar comandos de forma secuencial por agregado.
 
 ## Objetivo del dominio
 
@@ -231,6 +231,51 @@ kurrentdb:
   connection-string: kurrentdb://localhost:2113?tls=false
 ```
 
-## Notas
+## Probar
 
-Esta PoC usa Payment Processing como dominio de ejemplo. El mismo patrón puede aplicarse a dominios fintech como transferencias, billeteras digitales, créditos, conciliación, reversas o liquidación de pagos.
+Levanta KurrentDB:
+
+```text
+cd infraestructura
+docker compose up -d
+```
+
+Verifica que esté arriba:
+```text
+docker ps
+```
+
+KurrentDB queda en:
+http://localhost:2113
+
+Luego levanta el microservicio:
+
+```text
+cd ..
+mvn spring-boot:run
+```
+
+El API queda en:
+
+http://localhost:8080
+
+Swagger:
+http://localhost:8080/swagger-ui.html
+
+Docker files incluidos:
+
+```text
+infraestructura/
+├── docker-compose.yml   # levanta KurrentDB
+├── Dockerfile           # construye la imagen del microservicio Java
+├── requests/            # ejemplos de requests
+└── responses/           # ejemplos de responses
+```
+
+Para probar:
+
+```text
+curl -X POST http://localhost:8080/payments/v1/payments \
+  -H "Content-Type: application/json" \
+  -d @infraestructura/requests/01-initiate-payment.json
+```
