@@ -1,4 +1,4 @@
-## Qué implementa
+#  Proyecto
 
 El bounded context es `AgilePM`. El agregado principal es `Product`, modelado como event-sourced aggregate.
 
