@@ -1,0 +1,8 @@
+{
+  "merchantId": "merchant-001",
+  "customerId": "customer-9001",
+  "amount": 150.75,
+  "currency": "PEN",
+  "paymentMethod": "CARD",
+  "orderId": "order-2026-0001"
+}

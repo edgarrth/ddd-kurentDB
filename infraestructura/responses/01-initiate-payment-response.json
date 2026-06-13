@@ -1,0 +1,12 @@
+{
+  "paymentId": "7fd5a6d8-5ac8-4fc7-a782-a5e878a0d301",
+  "merchantId": "merchant-001",
+  "customerId": "customer-9001",
+  "amount": 150.75,
+  "currency": "PEN",
+  "paymentMethod": "CARD",
+  "orderId": "order-2026-0001",
+  "status": "NEW",
+  "authorizationCode": null,
+  "captureReference": null
+}
